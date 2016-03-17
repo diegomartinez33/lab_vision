@@ -1,0 +1,211 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[breaklinks=true,bookmarks=false]{hyperref}
+
+\cvprfinalcopy % *** Uncomment this line for the final submission
+
+\def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Berkeley Segmentation Data Set and Benchmarks 500 (BSDS500) Laboratory}
+
+\author{Diego Mart\'inez\\
+Universidad de Los Andes\\
+Cra 1N 18A-12 Bogot\´a (Colombia)\\
+{\tt\small da.martinez33@uniandes.edu.co}
+% For a paper whose authors are all at the same institution,
+% omit the following lines up until the closing ``}''.
+% Additional authors and addresses can be added with ``\and'',
+% just like the second author.
+% To save space, use either the email address or home page, not both
+\and
+Felipe Torres\\
+Universidad de Los Andes\\
+Cra 1N 18A-12 Bogot\´a (Colombia)\\
+{\tt\small f.torres11@uniandes.edu.co}
+}
+
+\maketitle
+%\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+Research in Computer Vision has three main areas of interest and one of them is the segmentation of images. The segmentation problem has been tried to solve via different approaches but still the most commonly used are the implementation of clusters to re-group pixels that contain about similar information, however this is not the only way that this is done but the most recurrent. Among the clustering methods actually known, K-Means and Gaussian Mixture Models are the ones that stand out from the others due to their accuracy and performance, the last being a little bit faded due to their slow time to process an image. In this article a matlab function was developed to segment images according to the clustering approach, said function allows the user to select whether if the segmentation is going to be done by K-Means, GMM or the watershed transform, and the color space over which clustering is going to be taken into account. Then said methodology was tested on Berkeley's BSDS 500 and the results described the better performance for GMM at HSV+XY color space. \\
+
+\textit{\textbf{Key words: Clustering, K-Means, GMM, Watershed}}
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+In Computer Vision the design of algorithms and methodologies to classify and detect objects inside images needs a huge amount of data to verify the accuracy and performance of said methods, yet; before the people working in the field became aware of  the importance of sharing (algorithms and data), most experiments and results could not be replicated easily and research in the subject was getting stuck due to the little (not to say null) capacity to compare algorithms and methods. With the arrival of internet and \textit{The internet of things} people started to become aware of the advantages that could be achieved by sharing frameworks and data to perform experiments; on segmentation and regrouping the release of \textbf{BSDS300} and later on \textbf{BSDS500} (Berkeley Segmentation Data Set) by UC Berkeley, pushed forward the methods and state of the art on said topics. These databases contain 300 and 500 images respectively, yet; the importance of these relys on the human made annotations to every single one of the images, thus providing the researchers a capability to compare the obtained results with the human made segmentation.
+
+BSDS500 was first released with Arbel\´aez, Maire, Fowlkes and Malik's Contour Detection and Hierarchical Segmentation \cite{amfm_pami2011}, this method provided a high performance contour detector, a method to transform any contour signal into a hierarchy of regions and finally extensive quantitative evaluation helped with the release of the dataset.
+
+Traditionally, segmentation in computer vision has been regarded as a topic to be treated by clustering data, however several methodologies exist for clustering, yet; the most important ones and the ones used in this work are K-Means and Mixture of Gaussian Models. In addition to these methods, research has showed that aided with the values of intensity given for each image, a hierarchich segmentation can be done by the implementation of the watershed transform in cooperation with the imposition of regional minimums in the image. An example of these hierarchichal segmentations is presented in the \textit{Contour Detection and Hierarchical Segmentation} by the authors mentioned before\cite{amfm_pami2011}.
+However, these methods are expensive and slow and nowadays with the revitalization of Neural Networks starting with AlexNet by Alex Krizhevsky \cite{NIPS2012_4824}, several segmentation strategies have been purposed much more efficient and accurate, such as R-CNN \cite{girshick2014rcnn} and Faster R-CNN\cite{girshick15fastrcnn}.
+
+
+\section{Methodology}
+A matlab function named \textbf{\textit{segment\_by\_clustering()}} was developed to segment a desired image. This function allows the user to have different feature spaces such as 'rgb','hsv','lab' and the combination of said spaces with the information of spatial localization for each pixel (such as 'rgb+xy'). The clustering methods vary from K-Means, Watershed and GMM (Gaussian Mixtures Model). Finally the last input of this function  answers to the desired number of clusters that the user may want to have, briefly we are going to present in detail the parameters of this function.
+
+\subsection{Segmentation Methods}
+Segmentation Methods avialable to implement in this function are: K-Means, GMM, Watershed
+\begin{itemize}
+    \item K-Means. 
+     K-Means is an iterative method that assigns n-obsertvations to exactly one of the K-clusters defined by centroids, where K is the number of clusters desired before the initialization of the algorithm.
+     It follows the next steps:\\
+     \textbf{1)} Choose k initial cluster centers. \\
+     \textbf{2)} Compute point-to cluster centroid distance for all observations to each and every centroid.\\
+     \textbf{3)} Each observation is assigned to the cluster with the closest centroid.\\
+     \textbf{4)} Compute the average observations in each cluster to obtain K-new centroid locations.\\
+     \textbf{5)} Repeat iterations 2 to 4. In computational terms this is done until cluster assignements don't change or a certain number of iterations is achieved\\
+     K-Means clustering method is also known as Lloyd's algorithm, also this is used as the main tool to cluster data, however the application of this method requires a lot of computer memory making it expensive to implement.\cite{lloyd_1982}\\
+     \item GMM.
+     A Gaussian Mixture Models (GMM) are composed of K-Multivariate normal density components, each one of these components has a d-dimensional mean; a d-by-d covariance matrix and a mixing proportion; mixing proportion j determines the pfraction of the population composed by the component j, \textit{j = 1,...k}.
+     As the function is developed on MATLAB, to fix a GMM the following algorithm needs to be followed:\\
+     \textbf{1)} Extract colour and coordinate matrixes and turn them into vectors, then concatenate them into a new Matrix.\\
+     \textbf{2)} Fit the GMM model by applying MATLAB function fitgmdist with input parameters  the matrix from before and the K number of clusters.\\
+     \textbf{3)} Once the GMM model is out as the output of fitgmdist, use cluster function; using the GMM model and the features Matrix.\\
+     \textbf{4)} Reshape.\\
+     GMM models present the same issues as K-Means, the output of this algorithm will get a good segmentation of the image, however it is really slow and sometimes it can throw errors because it is not easy to find the covariance in less than 100 iterations (These iterations are part of the fitgmdist function).\cite{mclachlan_peel_2000}
+     
+     \item Watershed. 
+     A watershed is a line that determines where from two basins a water drop will go. In image processing, the intensity of a grayscale can be seen as a topographic map, in which; the higher the intensity, the higher a peak will go and in regions where the intensity is low a basin will be created. To imagine how the transform works we think as if the topographic map is being flooded, and everytime two basins are about to be joint together we can draw a line to separate them, that is the watershed.\cite{meyer_1994}
+     However the simple version of this transform creates a distorted image in which the number of superpixels is way too big to even be considered as useful, therefore; we implement the marker controlled one. In this one, we select a K (height/value of intensity) which will be the threshold for the minimum values of intensity, and every value below it will be considered as K, thus creating a cleaner partition map.
+\end{itemize}
+
+Two color spaces were selected to run in the dataset, 'HSV+XY' and 'RGB'. HSV+XY provides a linear descriptor for colour and the XY coordinates aid with the spatial positioning of items inside the image. RGB colorspace is the image without any modification, we set RGB because we wanted to compare how an uniform colorspace (HSV) with coordinates would create differences from the segmentation with the image.
+
+Also we selected GMM and K-Means. These two methods can be \textbf{really} slow, however they are more accurate than watershed transform, more importantly the clusters can be directly controlled with the input, yet with watershed transform it is uncertain at what level the image will be segmented with the K selected.
+
+\subsection{Test Metodology}
+
+\subsubsection{Dataset}
+Tha daset was composed of 500 images from Berkeley Segmentation Dataset. All images had 481x321 pixels represented in RGB colorspace and saved in .jpg format \cite{bsds}. The 500 images are organized or divided in three different subsets in order to developt the test methodology and obtain optimazed parameters that give best segmentation performance:
+\begin{itemize}
+    \item Train dataset: Which describes 200 images from original 500 images that are used in parameter tunning and selection of parameters that maximize the algorthm performance
+    \item Validation dataset: Which describes 100 images from original 500 images, that is useful to optimize and improve algorithm performance
+    \item Test dataset: Which is composed of 200 images and is useful to test and evaluate robustness of optimized algorith if it is evaluated in images totally different to Train and Validation images
+\end{itemize}
+
+Each image from the dataset must have a groundtruth or image annotations. For the Berkeley Segmentation Dataset it was cosntructed with human hand made anotattions for segmentation from five different people and taking the averege of them\cite{bsds}.
+    
+
+To test the function, it was run on the Dataset and 5 segmentations per Image were obtained. Said segmentations were stored in a cell array named 'segs' in a .mat file wich then would be read by the function to test the benchmark.
+
+To get the desired segmentations four experiments were purposed, yet they all had in common the same parameter, K number of clusters would vary from 5 to 9.
+
+\begin{itemize}
+    \item First Experiment: The first experiment consisted on implementing K-Means on every Image  using the feature space HSV+XY.
+    \item Second Experiment: The second experiment consisted on implementing GMM on every Image, using the feature space HSV+XY.
+    \item Third Experiment: The third experiment consisted on implementing K-Means on every Image  using the feature space RGB.
+    \item Fourth Experiment: The fourth experiment consisted on implementing GMM on every Image, using the feature space RGB.
+\end{itemize}
+One may wonder why marker controlled watershed transform was not implemented. To adress that issue we go back to the outputs of the function, it is true that watershed transform is \textbf{way} faster than the implementation of K-Means or GMM, however the output will not always have the K number of clusters that were desired and the image may consist mainly of superpixels or background.
+
+After implementation of the function over all the images, there was necesary the use of already implemented methodologies of evaluation. In this case, we utilized benchmarks funcions created by Malik and its colleagues at Berkeley Segmentation Data Set and Benchmarks 500 (BSDS500). Benchmark unction \textbf{\textit{boundary\_bench()}} allow us to obtain precision of implementation through Precision-Recall curves, besides other performance classification algorithms like best Precision and Recall values, Rand indez and Variance information. Worth to explain that precision-recall curves gives proportion meassures correctly labeled in a segementation. Results of this curves are shown at Figures 6, 7 and 8. Benchmark were applied to segmentation results of each combination of color space and segmentation method mentioned previously at the experiments.
+
+\section{Results}
+
+\subsection{Implementation of the Function}
+The function implementation is fairly easy to do, you just need to bear in mind that you must input the correct name for each clustering method (however it may not affect if you write K-MEANS or k-means, capital letters won't affect the performance). To begin with we can briefly check the documentation to have a clear point of view for the function.
+\begin{figure}[h]
+    \includegraphics[width=0.6\textwidth]{HelpFn}
+    \caption{Help Command in matlab containing the documentation for the function}
+\end{figure}
+To continue  as we know the syntaxis needed in order to have a well functioning image we present the results obtained of our experiments in just one single image and one of the five K variations used, this K variation will be K = 7.
+
+\subsection{First Experiment}
+With the first experiment we wanted to check how the feature space affects the output in K-Means, the output is shown below:
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{Figure1}
+    \caption{Comparisson between using K-Means with feature spaces HSV+XY and RGB}
+\end{figure}
+
+\subsection{Second Experiment}
+With this experiment we wanted to check again how the feature space affects the output but using GMM.
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{Figure2}
+    \caption{Comparisson between using GMM with feature spaces HSV+XY and RGB}
+\end{figure}
+
+\subsection{Third Experiment}
+Now after checking how different feature spaces affect the same method, we checked how different clustering methods affect the output using the same feature space.
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{Figure3}
+    \caption{Comparisson between using GMM and K-Means with feature space HSV+XY}
+\end{figure}
+
+Finally we check the last experiment
+
+\subsection{Fourth Experiment}
+At last we want to check how the output varies from K-Means to GMM using the image without any extra feature spaces.
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{Figure3}
+    \caption{Comparisson between using GMM and K-Means with feature space RGB}
+\end{figure}
+
+On the other hand, as can be seen in Precession-Recall curves Figures 6, 7, 8 and 9 bencharks were implemented correctly for first, second, third and fourth experiments, respectively. 
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{test1}
+    \caption{Precision-Recall curve of HSV+XY and K-means}
+\end{figure}
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{test2}
+    \caption{Precision-Recall curve of HSV+XY and GMM}
+\end{figure}
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{test3}
+    \caption{Precision-Recall curve of RGB and K-means}
+\end{figure}
+
+\begin{figure}[h]
+    \includegraphics[width=0.4\textwidth]{test4}
+    \caption{Precision-Recall curve of RGB and GMM}
+\end{figure}
+
+\section{Discussion}
+
+Firstly, visual results of segmentation of Figures 2, 3 and 4 gives us an idea of which of segmentation methodology had the best performance. 
+Segmentation results for K-means describes and over fitting of clasification of pixels at every image. An example of this is the Figure 4, at which segmentation by K-means divedes the bird in to different objects, yet it represent a unique object at the image. On the other hand, GMM gives a better segmentation regarding it don't separated in 2 different clusters pixels of the same object. This could be the result of non-homogeneous and soft-clustering that represents GMM when implemented at a segmentation problem.
+
+However, after anilize Precision-Recal curves that result from benchmark carried through, differences between the two segmentation methods are not too significatives. Actually, the real difference excel from the two types of color spaces. As seen in segmentation example images of Figures 2 and 3, the most effective  color space over which segmentation should be done is HSV+XY over RGB. This is explain because, a more larger and richer descriptor of the image is bieng used. HSV+XY give more information than RGB as to Hue, Saturation and Brightness, which is give more data than just color or intensities, and also adds spatial information with X and Y coordinates.
+
+Finally, the best method of segmentation,from the methods implemented in the present research, is GMM clustering over a HSV+XY color space. At the end this method can be limited at its performance of precision and recall, which are minimal comparing to other methods like global contours detector and UCM \cite{bsbds}\cite{amfm_pami2011}. Many artifacts ar added to the segmentation related to overclustering of the image at which pixels from the same object are assigned as part of two different objects.
+
+\section{How to Improve}
+There are several different methods to segment Images that do not require the same computational power as GMM and K-Means, however these two methods can be improved by switching certain parameters.
+
+In order to improve performance in time we can lesser the number of clusters that will be required, say from 2 to 7. Another way to improve this is by restraining the number of iterations of the method, it may not converge at covariances or centroids but the speed would be faster than it is achieved at the moment.
+
+Now if we want to improve the accuracy and precision of the methods we can look at state of the art segmentation methods. One way to approach the segmentation method can be MCG (Multiscale Combinational Grouping). This method relies on selecting regions and forming masks; once the masks are formed a hierarchichal segmentation is done by using different scales; after the segmentation is complete, the output images are resized and realigned to have about the same size of the original and the answers with the most frequency will have an edge with a higher intensity. \cite{APBMM2014}.
+Another approach can be the implementation of convolutional neural networks (CNN). By just mentioning CNN we have a high variability of methods possible to implement the segmentation, therefore we will be now talking about Faster R-CNN. Faster R-CNN is a method designed by Ross Girshick, that using selective search method\cite{Uijlings13} to obtain region purposals, runs a CNN pre-trained in ImageNet and fine tunes it in Pascal VOC challenge\cite{girshick2014rcnn}. This method is highly slow, therefore Girshick a year after it's publication purposed the faster version of it, being Faster R-CNN. Faster R-CNN runs without the need to use external methods to obtain region purposals (using sliding window) and Bounding Box Regresion, then in difference to R-CNN, it does not use a SVM vector as the last layer of the ConvNet but it switches to a soft max layer at the end of the CNN instead of the SVM implemented before by Girshick\cite{girshick15fastrcnn}
+{\small
+\bibliographystyle{ieee}
+\bibliography{BSDS}
+}
+
+\end{document}
