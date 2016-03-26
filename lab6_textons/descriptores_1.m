@@ -17,8 +17,8 @@ cont=1;
 for i=1:13
     for j=1:4
         TXT(cont).image = imread(fullfile(cd,'textures','train',...
-            dirtrain(j+(30*i)).name));
-        TXT(cont).name = dirtrain(j+(30*i)).name;
+            dirtrain(j+(30*(i-1))).name));
+        TXT(cont).name = dirtrain(j+(30*(i-1))).name;
         % diccionario de textones
         im=TXT(cont).image;
         [map,textons] = computeTextons(fbRun(fb,im),k);
