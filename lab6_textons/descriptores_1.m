@@ -14,7 +14,7 @@ dirtrain = dir(fullfile(cd,'textures','train','*.jpg'));
 TXT=struct('name',[],'image',[],'map',[],'textons',[]);
 
 cont=1;
-for i=1:13
+for i=14:25
     for j=1:4
         TXT(cont).image = imread(fullfile(cd,'textures','train',...
             dirtrain(j+(30*(i-1))).name));
@@ -28,3 +28,4 @@ for i=1:13
         cont
     end
 end
+save('primeraprueba_2.mat');
