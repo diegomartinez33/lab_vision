@@ -70,6 +70,7 @@ while num <= 100
     num=num+10;
 end
 
+save('ClassifTotal.mat','TXT','Forests');
 %% Test
 
 %carga descriptores de base de datos de test
