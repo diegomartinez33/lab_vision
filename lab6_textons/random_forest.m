@@ -72,6 +72,9 @@ end
 
 %% Test
 
+%carga descriptores de base de datos de test
+load('TXTtest.mat');
+
 %Organiza histogramas y etiquetas para meter a TreeBagger
 for i=1:size(TXTtest,2)
     descripTest(i,:)=TXTtest(i).hists';
