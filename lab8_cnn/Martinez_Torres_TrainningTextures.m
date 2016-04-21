@@ -43,4 +43,5 @@ end
 % Guarda resultados de CNN
 net.layers(end) = [] ;
 net.imageMean = imageMean ;
+mkdir('data/pruebas1');
 save('data/pruebas1/textonscnn1.mat', '-struct', 'net') ;
